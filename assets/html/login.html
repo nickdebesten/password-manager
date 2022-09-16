@@ -14,6 +14,7 @@
 	<style>
 		body {
 			font-family: 'Roboto', sans-serif;
+			background-color: black;
 		}
 	</style>
 	<script>
@@ -73,13 +74,13 @@
 <body>
 	<nav class="teal">
 		<div class="nav-wrapper">
-			<a class="brand-logo center">Password Manager</a>
+			<a class="brand-logo center" >Password Manager</a>
 		</div>
 	</nav>
 	<div class="container">
 		<div>
-			<label>Enter Password</label>
-			<input type="password" id="password" autofocus required>
+			<label style="color: white;">Enter Password</label>
+			<input style="background-color: rgb(35,35,35);color: white"type="password" id="password" autofocus required>
 		</div>
 		<label id="show-error" class="materialize-red-text" style="display:none">Please enter a Password</label><br>
 		<a class="waves-effect waves-light btn" id="submitButton" onclick="sendDataToBackend()"> <i

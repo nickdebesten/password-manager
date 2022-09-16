@@ -1,4 +1,4 @@
 node_modules
-.passMan.db
-release-builds
-dump.txt
+dist/
+package-lock.json
+electron-builder.yml

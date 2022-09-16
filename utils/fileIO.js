@@ -1,4 +1,6 @@
-const filename = './.passMan.db'
+const {app} = require("electron")
+let path = app.getPath("home")
+const filename = `${path}/Onderwijsgroep Tilburg/ConnexT - General/password manager/.passMan.db`
 const fs = require('fs')
 const fsPromises = fs.promises
 const {

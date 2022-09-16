@@ -3,7 +3,8 @@ const {
   BrowserWindow,
   ipcMain,
   screen,
-  Menu
+  Menu,
+  Tray
 } = require('electron')
 const path = require('path')
 const { generateKey } = require('./utils/encryption')
@@ -16,13 +17,38 @@ const LOGIN_HTML = './assets/html/login.html'
 const SAVE_PASSWORD_HTML = './assets/html/savePassword.html'
 const PASSWORD_LIST_HTML = './assets/html/passwordList.html'
 const SAVE_SERVICE_HTML = './assets/html/saveService.html'
+let tray = ""
+function createTray(win) {
+   tray = new Tray(path.join(__dirname, "icon.ico"));
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: 'Show',
+      click() {win.show()}
+    },
+    {
+      type: 'separator',
+  },
+  
+    {
+      label: 'Exit',
+      click() { app.quit(); }
+    }
+  ]);
 
+  tray.on('click', function (event) {
+    win.show()
+  });
+  tray.setToolTip('Password Manager');
+  tray.setContextMenu(contextMenu);
+  
+}
 async function createWindow () {
   const { width, height } = screen.getPrimaryDisplay().workAreaSize
   // Create the browser window.
   win = new BrowserWindow({
-    width: parseInt(width * 0.75),
-    height: parseInt(height * 0.75),
+    width: parseInt(width * 0.50),
+    height: parseInt(height * 0.65),
+    icon: "./icon.ico",
     webPreferences: {
       nodeIntegration: false, // is default value after Electron v5
       contextIsolation: true, // protect against prototype pollution
@@ -30,6 +56,7 @@ async function createWindow () {
       preload: path.join(__dirname, 'preload.js') // use a preload script
     }
   })
+  //win.webContents.openDevTools()
   Menu.setApplicationMenu(null)
 
   // Load app
@@ -38,6 +65,9 @@ async function createWindow () {
   win.on('closed', function () {
     app.quit()
   })
+  createTray(win)
+  let test = app.getPath('home')
+  console.log(test)
 }
 
 app.on('ready', createWindow)
@@ -86,7 +116,7 @@ ipcMain.on('showSaveService', (event, args) => {
 })
 
 ipcMain.on('showChangePassword', (event, args) => {
-  win.loadFile(path.join(__dirname, SAVE_PASSWORD_HTML))
+  win.loadFile(path.join(__dirname, PASSWORD_LIST_HTML))
 })
 
 ipcMain.on('deleteAll', async (event, args) => {
@@ -103,3 +133,6 @@ ipcMain.on('deleteOneService', async (event, args) => {
   const dataToBeSent = await database.deleteOne(args.id)
   win.webContents.send('showMessage', dataToBeSent.message)
 })
+ipcMain.on('logout', async (event, args) => {
+win.loadFile(LOGIN_HTML)
+});

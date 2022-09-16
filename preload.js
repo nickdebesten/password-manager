@@ -9,7 +9,7 @@ contextBridge.exposeInMainWorld(
   'api', {
     send: (channel, data) => {
       // whitelist channels
-      const validChannels = ['adminLogin', 'savePassword', 'getDetails', 'saveOne', 'showHome', 'showSaveService', 'showChangePassword', 'deleteAll', 'checkIfPasswordExists', 'deleteOneService']
+      const validChannels = ['adminLogin', 'savePassword', 'getDetails', 'saveOne', 'showHome', 'showSaveService', 'showChangePassword', 'deleteAll', 'checkIfPasswordExists', 'deleteOneService', 'logout']
       if (validChannels.includes(channel)) {
         ipcRenderer.send(channel, data)
       }
