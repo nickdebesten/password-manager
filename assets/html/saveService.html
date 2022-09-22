@@ -17,6 +17,25 @@
 		}
 	</style>
 	<script>
+		function randompass(letters, numbers, either) {
+			var chars = [
+   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", // letters
+   "0123456789", // numbers
+   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@!#$%" // either
+  ];
+
+  return [letters, numbers, either].map(function(len, i) {
+    return Array(len).fill(chars[i]).map(function(x) {
+      return x[Math.floor(Math.random() * x.length)];
+    }).join('');
+  }).concat().join('').split('').sort(function(){
+    return 0.5-Math.random();
+  }).join('')
+		}
+		function randompass1(letters, numbers, either) {
+			let pass = document.getElementById("password")
+			pass.value = randompass(letters, numbers, either)
+		}
 		function sendDataToBackend() {
 			if (validate()) {
 				const service = encodeURIComponent(document.getElementById('service').value.trim())
@@ -100,6 +119,8 @@
 			blank</label><br>
 		<a class="waves-effect waves-light btn" id="submitButton" onclick="sendDataToBackend()"> <i
 				class="material-icons left">save</i>Save</a>
+				<a class="waves-effect waves-light blue btn" id="randompass" onclick="randompass1(20,10,5)"><i 
+					class="material-icons left">sync</i>Random password</a>
 	</div>
 
 </body>

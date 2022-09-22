@@ -1,9 +1,13 @@
+const unhandled = require('electron-unhandled');
+
+unhandled();
 const {
   app,
   BrowserWindow,
   ipcMain,
   screen,
   Menu,
+  Notification,
   Tray
 } = require('electron')
 const path = require('path')
@@ -12,12 +16,20 @@ const database = require('./utils/database')
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let win
+const {autoUpdater} = require("electron-updater");
+const jsonf = require('./package.json');
+const { fstat, exists } = require('fs');
+const fs = require('fs')
+let versie = jsonf.version
 const SUCCESS_STATUS = 'success'
-const LOGIN_HTML = './assets/html/login.html'
-const SAVE_PASSWORD_HTML = './assets/html/savePassword.html'
-const PASSWORD_LIST_HTML = './assets/html/passwordList.html'
-const SAVE_SERVICE_HTML = './assets/html/saveService.html'
+const LOGIN_HTML = '/assets/html/login.html'
+const SAVE_PASSWORD_HTML = '/assets/html/path.html'
+const PASSWORD_LIST_HTML = '/assets/html/passwordList.html'
+const SAVE_SERVICE_HTML = '/assets/html/saveService.html'
+const UPDATE_HTML = '/assets/html/update.html'
+app.setAppUserModelId("Password Manager")
 let tray = ""
+let closedd = false
 function createTray(win) {
    tray = new Tray(path.join(__dirname, "icon.ico"));
   const contextMenu = Menu.buildFromTemplate([
@@ -42,13 +54,14 @@ function createTray(win) {
   tray.setContextMenu(contextMenu);
   
 }
+
 async function createWindow () {
   const { width, height } = screen.getPrimaryDisplay().workAreaSize
   // Create the browser window.
   win = new BrowserWindow({
     width: parseInt(width * 0.50),
     height: parseInt(height * 0.65),
-    icon: "./icon.ico",
+    icon: path.join(__dirname, 'icon.ico'),
     webPreferences: {
       nodeIntegration: false, // is default value after Electron v5
       contextIsolation: true, // protect against prototype pollution
@@ -56,21 +69,39 @@ async function createWindow () {
       preload: path.join(__dirname, 'preload.js') // use a preload script
     }
   })
-  //win.webContents.openDevTools()
+ // win.webContents.openDevTools()
   Menu.setApplicationMenu(null)
-
+win.on("closed", (event) => {
+app.quit()
+});
   // Load app
+ // win.loadFile("C:/Users/Nick/Downloads/Password-Manager/assets/html/path.html")
   if (database.checkIfDbExists()) { win.loadFile(path.join(__dirname, LOGIN_HTML)) } else { win.loadFile(path.join(__dirname, SAVE_PASSWORD_HTML)) }
-
-  win.on('closed', function () {
-    app.quit()
-  })
-  createTray(win)
-  let test = app.getPath('home')
-  console.log(test)
+win.on('minimize', (event) => {
+event.preventDefault()
+const melding = {
+  title: "Password Manager",
+  body: 'Password Manager minimized.',
+  icon: path.join(__dirname, 'icon.ico')
 }
+new Notification({ title: melding.title, body: melding.body, icon: melding.icon}).show()
 
-app.on('ready', createWindow)
+});
+  createTray(win)
+}
+let loading;
+function update() {
+ loading = new BrowserWindow({
+    width: 550,
+    height: 550,
+    icon: path.join(__dirname, 'icon.ico'),
+    frame: false
+  })
+  Menu.setApplicationMenu(null)
+  loading.loadFile(path.join(__dirname, UPDATE_HTML))
+  autoUpdater.checkForUpdates()
+}
+app.on('ready', update)
 
 ipcMain.on('savePassword', async (event, args) => {
   global.enc_key = generateKey(args.password)
@@ -134,5 +165,48 @@ ipcMain.on('deleteOneService', async (event, args) => {
   win.webContents.send('showMessage', dataToBeSent.message)
 })
 ipcMain.on('logout', async (event, args) => {
-win.loadFile(LOGIN_HTML)
+  win.loadFile(path.join(__dirname, LOGIN_HTML))
 });
+
+
+ autoUpdater.on('checking-for-update', () => {
+  console.log("checking for updates")
+ })
+
+ autoUpdater.on('update-available', (info) => {
+  console.log("update available")
+  const melding = {
+    title: "Password Manager",
+    body: 'Downloading update..',
+    icon: path.join(__dirname, 'icon.ico')
+  }
+  new Notification({ title: melding.title, body: melding.body, icon: melding.icon}).show()
+})
+ autoUpdater.on('update-not-available', (info) => {
+  const melding = {
+    title: "Password Manager",
+    body: 'No update found. Starting password manager ' + versie,
+    icon: path.join(__dirname, 'icon.ico')
+  }
+  new Notification({ title: melding.title, body: melding.body, icon: melding.icon}).show()
+loading.hide()
+createWindow()
+ })
+  autoUpdater.on('update-downloaded', (info) => {
+   autoUpdater.quitAndInstall();  
+ })
+ let quit;
+ app.on('before-quit', (event) => {
+  if(quit == true)return
+  quit = true
+  event.preventDefault()
+  const melding = {
+    title: "Password Manager",
+    body: 'Password Manager closing...',
+    icon: path.join(__dirname, 'icon.ico')
+  }
+  new Notification({ title: melding.title, body: melding.body, icon: melding.icon}).show()
+  setTimeout(() => {
+    app.exit()
+  }, 1000);
+ });
