@@ -1,0 +1,18 @@
+{
+    "name": "Password manager",
+    "version": "1.0",
+    "manifest_version": 3,
+    "action": {
+      "default_popup": "popup.html"
+    },
+    "host_permissions": ["http://*/*","https://*/*"],
+    
+    "background": {
+      "service_worker": "background.js"
+    },
+    "icons": { "16": "icon-6.png",
+           "48": "icon-4.png",
+          "128": "icon-1.png" },
+
+    "permissions": ["storage", "activeTab", "scripting", "tabs"]
+  }

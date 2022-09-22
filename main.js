@@ -29,6 +29,7 @@ const SAVE_SERVICE_HTML = '/assets/html/saveService.html'
 const UPDATE_HTML = '/assets/html/update.html'
 app.setAppUserModelId("Password Manager")
 let tray = ""
+let loggedout = false
 let closedd = false
 function createTray(win) {
    tray = new Tray(path.join(__dirname, "icon.ico"));
@@ -54,6 +55,32 @@ function createTray(win) {
   tray.setContextMenu(contextMenu);
   
 }
+async function webserver() {
+  var http = require('http'); // Import Node.js core module
+
+var server = http.createServer(async function (req, res) {  
+  if(loggedout == true)return res.end('loggout') //create web server
+    if (req.url == '/test') { //check the URL of the current request
+      const dataToBeSent = await database.readAll()
+      //  console.log(dataToBeSent.data.passwords)
+        // set response header
+        res.writeHead(200, { 'Content-Type': 'text/html' }); 
+        let test = JSON.stringify(dataToBeSent, undefined, 2);
+        // set response content    
+        res.write(`${test}`);
+        res.end();
+    
+    }
+
+    else
+        res.end('Invalid Request!');
+
+});
+
+server.listen(1234); //6 - listen for any incoming requests
+
+console.log('Node.js web server at port 5000 is running..')
+}
 
 async function createWindow () {
   const { width, height } = screen.getPrimaryDisplay().workAreaSize
@@ -69,7 +96,7 @@ async function createWindow () {
       preload: path.join(__dirname, 'preload.js') // use a preload script
     }
   })
- // win.webContents.openDevTools()
+  win.webContents.openDevTools()
   Menu.setApplicationMenu(null)
 win.on("closed", (event) => {
 app.quit()
@@ -101,7 +128,7 @@ function update() {
   loading.loadFile(path.join(__dirname, UPDATE_HTML))
   autoUpdater.checkForUpdates()
 }
-app.on('ready', update)
+app.on('ready', createWindow)
 
 ipcMain.on('savePassword', async (event, args) => {
   global.enc_key = generateKey(args.password)
@@ -116,6 +143,8 @@ ipcMain.on('adminLogin', async (event, args) => {
   console.log('Password is Correct?', isCorrect)
   if (isCorrect) {
     win.loadFile(path.join(__dirname, PASSWORD_LIST_HTML))
+    webserver()
+    loggedout = false
   } else {
     win.webContents.send('showMessage', 'You have entered wrong password')
   }
@@ -165,6 +194,7 @@ ipcMain.on('deleteOneService', async (event, args) => {
   win.webContents.send('showMessage', dataToBeSent.message)
 })
 ipcMain.on('logout', async (event, args) => {
+  loggedout = true
   win.loadFile(path.join(__dirname, LOGIN_HTML))
 });
 
